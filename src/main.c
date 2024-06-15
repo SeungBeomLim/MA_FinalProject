@@ -3,10 +3,13 @@
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/drivers/gpio.h>
+#include <zephyr/devicetree.h>
+#include <zephyr/sys/util.h>
 
+#include "led.h"
 #include "batterydisplay.h"
-#include "led.h" // Include the header for led functions
 
+// [LED Part]
 #define LEFT 0
 #define RIGHT 1
 #define MAX_ROTARY_IDX 10 // Add the max rotary index
@@ -22,20 +25,20 @@ static bool sw_led_flag = false;
 static int rotary_idx = 0;
 static int saved_numbers[MAX_SAVED_NUMBERS] = { -1, -1, -1, -1 };
 static int saved_index = 0;
-static int password[MAX_SAVED_NUMBERS] = {1, 2, 3, 4}; // 금고 비밀번호
+static int password[MAX_SAVED_NUMBERS] = {1, 2, 3, 4}; // ê¸ˆê³  ë¹„ë°€ë²ˆí˜¸
 static bool password_matched = false;
-int flag = true; // 금고 열리면 false로 변경
+int flag = true; // ê¸ˆê³  ì—´ë¦¬ë©´ falseë¡œ ë³€ê²½
 
 static struct gpio_callback sw_cb_data;
 
 static int seconds = 120;
 
-// 배터리 레벨 표시 함수
+// ë°°í„°ë¦¬ ë ˆë²¨ í‘œì‹œ í•¨ìˆ˜
 void update_battery_display(void)
 {
     int level;
 
-    // 배터리 레벨을 초에 따라 매핑
+    // ë°°í„°ë¦¬ ë ˆë²¨ì„ ì´ˆì— ë”°ë¼ ë§¤í•‘
     if (seconds >= 120) {
         level = 10;
     } else if (seconds >= 108) {
@@ -60,13 +63,13 @@ void update_battery_display(void)
         level = 0;
     }
 
-    // 해당 배터리 레벨 표시
+    // í•´ë‹¹ ë°°í„°ë¦¬ ë ˆë²¨ í‘œì‹œ
     display_level(level);
 
-    // 초 감소
+    // ì´ˆ ê°ì†Œ
     seconds--;
     if (seconds < 0) {
-        //seconds = 11; 리셋됨
+        //seconds = 11; ë¦¬ì…‹ë¨
         flag = false;
     }
 }
@@ -90,7 +93,7 @@ void sw_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pi
     saved_index = (saved_index + 1) % MAX_SAVED_NUMBERS;
 
     // Print saved numbers
-    if (saved_index == 0) {  // 4번 encoder에 입력이 완료된 경우
+    if (saved_index == 0) {  // 4ë²ˆ encoderì— ìž…ë ¥ì´ ì™„ë£Œëœ ê²½ìš°
         printk("complete\n");
         printk("Saved numbers: ");
         for (int i = 0; i < MAX_SAVED_NUMBERS; i++) {
@@ -127,11 +130,67 @@ void display_rotary_led(int32_t rotary_val)
     led_on_idx(rotary_idx, LEFT);
 }
 
+// [Battery Display Part]
+
+void my_work_handler(struct k_work *work)
+{
+        printk("Time: %d\n", seconds);
+
+        // Display the time on the battery display
+        if (seconds == 180 || seconds >= 175){
+                display_level(7);
+        } else if(seconds >= 170 && seconds < 175){
+                display_level(6);
+        } else if(seconds >= 165 && seconds < 170){
+                display_level(5);
+        } else if(seconds >= 160 && seconds < 165){
+                display_level(4);
+        } else if(seconds >= 155 && seconds < 160){
+                display_level(3);
+        } else if(seconds >= 150 && seconds < 155){
+                display_level(2);
+        } else if(seconds >= 140 && seconds < 150){
+                display_level(1);
+        } else {
+                display_level(0);
+        }
+
+        // Increment the seconds
+        seconds--;
+        if (seconds < 0){
+                seconds = 180;
+        }
+}
+
+K_WORK_DEFINE(my_work, my_work_handler);
+
+void my_timer_handler(struct k_timer *dummy)
+{
+        k_work_submit(&my_work);
+}
+
+K_TIMER_DEFINE(my_timer, my_timer_handler, NULL);
+
 int main(void)
 {
     struct sensor_value val;
     int rc;
     const struct device *const dev = DEVICE_DT_GET(DT_ALIAS(qdec0));
+
+    int ret = DK_OK;
+    ret = batterydisplay_intit();
+    if (ret != DK_OK) {
+            printk("Error initializing battery display\n");
+            return DK_ERR;
+        }
+    }
+
+    ret = led_init();
+    if (ret != DK_OK) {
+            printk("Error initializing LED\n");
+            return DK_ERR;
+        }   
+    }
 
     if (!device_is_ready(dev)) {
         printk("Qdec device is not ready\n");
@@ -169,7 +228,7 @@ int main(void)
         return 0;
     }
 
-    // 배터리 디스플레이 초기화
+    // ë°°í„°ë¦¬ ë””ìŠ¤í”Œë ˆì´ ì´ˆê¸°í™”
     if (batterydisplay_init() < 0) {
         printk("Battery display init failed\n");
         return 0;
@@ -181,19 +240,19 @@ int main(void)
         if (password_matched) {
             display_success_left();
             display_success_right();
-            break; // 비밀번호가 맞으면 while문 탈출
+            break; // ë¹„ë°€ë²ˆí˜¸ê°€ ë§žìœ¼ë©´ whileë¬¸ íƒˆì¶œ
         }
 
         if (!flag) {
             display_not_success_left();
             display_not_success_right();
-            //break; // 비밀번호가 틀리면 while문 탈출
-            k_msleep(3000); //슬픈 표정 지속 시간 이후 다시 비번 쳐야함.
-            rotary_idx = 0; //led가 계속 전에 썼던걸로 나와서 아예 0으로 초기화.
-            display_pattern(led_patterns[rotary_idx], RIGHT); // 실패 이후 오른쪽 0으로 
-            display_pattern(led_patterns[rotary_idx], LEFT); // 실패 이후 오른쪽 0으로
+            //break; // ë¹„ë°€ë²ˆí˜¸ê°€ í‹€ë¦¬ë©´ whileë¬¸ íƒˆì¶œ
+            k_msleep(3000); //ìŠ¬í”ˆ í‘œì • ì§€ì† ì‹œê°„ ì´í›„ ë‹¤ì‹œ ë¹„ë²ˆ ì³ì•¼í•¨.
+            rotary_idx = 0; //ledê°€ ê³„ì† ì „ì— ì¼ë˜ê±¸ë¡œ ë‚˜ì™€ì„œ ì•„ì˜ˆ 0ìœ¼ë¡œ ì´ˆê¸°í™”.
+            display_pattern(led_patterns[rotary_idx], RIGHT); // ì‹¤íŒ¨ ì´í›„ ì˜¤ë¥¸ìª½ 0ìœ¼ë¡œ 
+            display_pattern(led_patterns[rotary_idx], LEFT); // ì‹¤íŒ¨ ì´í›„ ì˜¤ë¥¸ìª½ 0ìœ¼ë¡œ
             flag = true;
-            seconds = 120; //배터리 초 다시 120으로 초기화
+            seconds = 120; //ë°°í„°ë¦¬ ì´ˆ ë‹¤ì‹œ 120ìœ¼ë¡œ ì´ˆê¸°í™”
         }
 
         rc = sensor_sample_fetch(dev);
@@ -218,7 +277,7 @@ int main(void)
 
         printk("current value: %d\n", rotary_idx);
 
-        // 배터리 디스플레이 업데이트
+        // ë°°í„°ë¦¬ ë””ìŠ¤í”Œë ˆì´ ì—…ë°ì´íŠ¸
         update_battery_display();
 
         k_msleep(750);

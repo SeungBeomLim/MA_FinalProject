@@ -27,15 +27,18 @@
 	gpiocustom {
 		status = "okay";
 		compatible = "gpio-keys";
+
 		gpiosw: gpiosw {
 			gpios = <&gpio1 5 (GPIO_PULL_UP)>;
 			label = "gpiosw P1.05";
 		};
-		gpioclk: gpioclk {
+    
+		gpioclk: gpioclk{
 			gpios = <&gpio1 12 GPIO_ACTIVE_HIGH>;
 			label = "gpioclk P1.12";
 		};
-		gpiodio: gpiodio {
+
+		gpiodio: gpiodio{
 			gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
 			label = "gpiodio P1.13";
 		};
@@ -57,6 +60,10 @@
 	pinctrl-names = "default";
 	steps = < 20 >;
 	led-pre = < 500 >;
+};
+
+&spi3 {
+	status = "disabled";
 };
 
 &i2c0 {
