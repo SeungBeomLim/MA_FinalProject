@@ -87,12 +87,23 @@ void display_pattern(const uint8_t pattern[8], bool right)
     }
 }
 
-void display_success(void)
+void display_success_left(void)
 {
     display_pattern(password_success, LEFT);
 }
 
-void display_not_success(void)
+void display_success_right(void)
+{
+    display_pattern(password_success, RIGHT);
+}
+
+void display_not_success_left(void)
 {
     display_pattern(password_unsuccess, LEFT);
 }
+
+void display_not_success_right(void)
+{
+    display_pattern(password_unsuccess, RIGHT);
+}
+

@@ -30,17 +30,17 @@ static bool sw_led_flag = false;
 static int rotary_idx = 0;
 static int saved_numbers[MAX_SAVED_NUMBERS] = { -1, -1, -1, -1 };
 static int saved_index = 0;
-static int password[MAX_SAVED_NUMBERS] = {1, 2, 3, 4}; //?˜„?¬ ê¸ˆê³  ë¹„ë??ë²ˆí˜¸
+static int password[MAX_SAVED_NUMBERS] = {1, 2, 3, 4}; //?ï¿½ï¿½?ï¿½ï¿½ ê¸ˆê³  ë¹„ï¿½??ë²ˆí˜¸
 static bool password_matched = false;
-int flag = true; //ê¸ˆê³  ???ë¦¬ë©´ falseë¡? ë³??•¨. 
+int flag = true; //ê¸ˆê³  ???ë¦¬ë©´ falseï¿½? ï¿½??ï¿½ï¿½. 
 
 
 static struct gpio_callback sw_cb_data;
 
-// ?™¸ë¶? ?„ ?–¸ ì¶”ê??
+// ?ï¿½ï¿½ï¿½? ?ï¿½ï¿½?ï¿½ï¿½ ì¶”ï¿½??
 extern const uint8_t led_patterns[10][8];
 
-bool compare_arrays(int *array1, int *array2, int size) { //ê¸ˆê³  ë¹„ë²ˆê³? ?˜„?¬ ?…? ¥?•œ ë¹„ë²ˆ ?™•?¸
+bool compare_arrays(int *array1, int *array2, int size) { //ê¸ˆê³  ë¹„ë²ˆï¿½? ?ï¿½ï¿½?ï¿½ï¿½ ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ ë¹„ë²ˆ ?ï¿½ï¿½?ï¿½ï¿½
     for (int i = 0; i < size; i++) {
         if (array1[i] != array2[i]) {
             return false;
@@ -59,7 +59,7 @@ void sw_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pi
     saved_index = (saved_index + 1) % MAX_SAVED_NUMBERS;
 
     // Print saved numbers
-    if (saved_index == 0) {  // 4ë²? encoderë¥? ?ˆŒ????„ ?–„
+    if (saved_index == 0) {  // 4ï¿½? encoderï¿½? ?ï¿½ï¿½????ï¿½ï¿½ ?ï¿½ï¿½
         printk("complete\n");
         printk("Saved numbers: ");
         for (int i = 0; i < MAX_SAVED_NUMBERS; i++) {
@@ -142,13 +142,15 @@ int main(void)
 
     while (true) {
         if (password_matched) {
-            display_success();
-            break; // ë¹„ë??ë²ˆí˜¸ê°? ë§ìœ¼ë©? while ?ƒˆì¶?
+            display_success_left();
+            display_success_right();
+            break; // ë¹„ï¿½??ë²ˆí˜¸ï¿½? ë§ìœ¼ï¿½? while ?ï¿½ï¿½ï¿½?
         }
 
 		if (!flag) {
-            display_not_success();
-            break; // ë¹„ë??ë²ˆí˜¸ê°? ???ë¦¬ë©´ whileë¬? ?ƒˆì¶?. ê·¼ë° ê³„ì† ë¹„ë²ˆ??? ?…? ¥?•´?•¼ ?•˜?‹ˆ, ?ƒˆì¶œì?? ë§ê³ , ?¼? • ?‹œê°„ë™?•ˆ ?š°?Š” ?–¼êµ? ë³´ì—¬ì£¼ê³  ?‹¤?‹œ 0?œ¼ë¡? ë¦¬ì…‹?•˜?“ ì§? ?•´?•¼?• ?“¯.
+            display_not_success_left();
+            display_not_success_right();
+            break; // ë¹„ï¿½??ë²ˆí˜¸ï¿½? ???ë¦¬ë©´ whileï¿½? ?ï¿½ï¿½ï¿½?. ê·¼ë° ê³„ì† ë¹„ë²ˆ??? ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ ?ï¿½ï¿½?ï¿½ï¿½, ?ï¿½ï¿½ì¶œï¿½?? ë§ê³ , ?ï¿½ï¿½?ï¿½ï¿½ ?ï¿½ï¿½ê°„ë™?ï¿½ï¿½ ?ï¿½ï¿½?ï¿½ï¿½ ?ï¿½ï¿½ï¿½? ë³´ì—¬ì£¼ê³  ?ï¿½ï¿½?ï¿½ï¿½ 0?ï¿½ï¿½ï¿½? ë¦¬ì…‹?ï¿½ï¿½?ï¿½ï¿½ï¿½? ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½.
         }
 
         rc = sensor_sample_fetch(dev);
