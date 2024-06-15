@@ -9,9 +9,14 @@
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/drivers/gpio.h>
+#include <zephyr/devicetree.h>
+#include <zephyr/sys/util.h>
 
 #include "led.h"
+#include "batterydisplay.h"
+#include "value.h"
 
+// [LED Part]
 #define LEFT 0
 #define RIGHT 1
 
@@ -34,12 +39,19 @@ static int password[MAX_SAVED_NUMBERS] = {1, 2, 3, 4}; //?òÑ?û¨ Í∏àÍ≥† ÎπÑÎ??Î≤à
 static bool password_matched = false;
 int flag = true; //Í∏àÍ≥† ???Î¶¨Î©¥ falseÎ°? Î≥??ï®. 
 
-
 static struct gpio_callback sw_cb_data;
 
 // ?ô∏Î∂? ?Ñ†?ñ∏ Ï∂îÍ??
 extern const uint8_t led_patterns[10][8];
 
+// [Battery Display Part]
+struct k_timer my_timer;
+struct k_work my_work;
+
+static int seconds = 180;
+
+
+// [LED Part]
 bool compare_arrays(int *array1, int *array2, int size) { //Í∏àÍ≥† ÎπÑÎ≤àÍ≥? ?òÑ?û¨ ?ûÖ?†•?ïú ÎπÑÎ≤à ?ôï?ù∏
     for (int i = 0; i < size; i++) {
         if (array1[i] != array2[i]) {
@@ -96,11 +108,67 @@ void display_rotary_led(int32_t rotary_val)
     led_on_idx(rotary_idx, LEFT);
 }
 
+// [Battery Display Part]
+
+void my_work_handler(struct k_work *work)
+{
+        printk("Time: %d\n", seconds);
+
+        // Display the time on the battery display
+        if (seconds == 180 || seconds >= 175){
+                display_level(7);
+        } else if(seconds >= 170 && seconds < 175){
+                display_level(6);
+        } else if(seconds >= 165 && seconds < 170){
+                display_level(5);
+        } else if(seconds >= 160 && seconds < 165){
+                display_level(4);
+        } else if(seconds >= 155 && seconds < 160){
+                display_level(3);
+        } else if(seconds >= 150 && seconds < 155){
+                display_level(2);
+        } else if(seconds >= 140 && seconds < 150){
+                display_level(1);
+        } else {
+                display_level(0);
+        }
+
+        // Increment the seconds
+        seconds--;
+        if (seconds < 0){
+                seconds = 180;
+        }
+}
+
+K_WORK_DEFINE(my_work, my_work_handler);
+
+void my_timer_handler(struct k_timer *dummy)
+{
+        k_work_submit(&my_work);
+}
+
+K_TIMER_DEFINE(my_timer, my_timer_handler, NULL);
+
 int main(void)
 {
     struct sensor_value val;
     int rc;
     const struct device *const dev = DEVICE_DT_GET(DT_ALIAS(qdec0));
+
+    int ret = DK_OK;
+    ret = batterydisplay_intit();
+    if (ret != DK_OK) {
+            printk("Error initializing battery display\n");
+            return DK_ERR;
+        }
+    }
+
+    ret = led_init();
+    if (ret != DK_OK) {
+            printk("Error initializing LED\n");
+            return DK_ERR;
+        }   
+    }
 
     if (!device_is_ready(dev)) {
         printk("Qdec device is not ready\n");
