@@ -62,6 +62,76 @@ void led_on_idx(int idx, bool right)
     display_pattern(led_patterns[idx], right);
 }
 
+void led_on_center(void)
+{
+    // led_off_all();
+    led_set_brightness(led, 0, 0);
+
+    for(int i = 38; i < 95; i+=16){
+        led_on(led, i);
+        led_on(led, i+1);
+        led_on(led, i+2);
+        led_on(led, i+3);
+    }
+
+    k_sleep(K_MSEC(100));
+}
+
+void led_on_right(void)
+{
+    // led_off_all();
+
+    led_on(led, 26);
+    led_on(led, 38); led_on(led, 39); led_on(led, 40); led_on(led, 41); led_on(led, 42); led_on(led, 43);
+    led_on(led, 54); led_on(led, 55); led_on(led, 56); led_on(led, 57); led_on(led, 58); led_on(led, 59); led_on(led, 60); led_on(led, 61);
+    led_on(led, 70); led_on(led, 71); led_on(led, 72); led_on(led, 73); led_on(led, 74); led_on(led, 75); led_on(led, 76); led_on(led, 77);
+    led_on(led, 86); led_on(led, 87); led_on(led, 88); led_on(led, 89); led_on(led, 90); led_on(led, 91);
+    led_on(led, 106);
+
+    k_sleep(K_MSEC(100));
+}
+
+void led_on_left(void)
+{
+    // led_off_all();
+
+    led_on(led, 21);
+    led_on(led, 36); led_on(led, 37); led_on(led, 38); led_on(led, 39); led_on(led, 40); led_on(led, 41);
+    led_on(led, 50); led_on(led, 51); led_on(led, 52); led_on(led, 53); led_on(led, 54); led_on(led, 55); led_on(led, 56); led_on(led, 57);
+    led_on(led, 66); led_on(led, 67); led_on(led, 68); led_on(led, 69); led_on(led, 70); led_on(led, 71); led_on(led, 72); led_on(led, 73);
+    led_on(led, 84); led_on(led, 85); led_on(led, 86); led_on(led, 87); led_on(led, 88); led_on(led, 89);
+    led_on(led, 101);
+
+    k_sleep(K_MSEC(100));
+}
+
+void led_on_up(void)
+{
+    // led_off_all();
+
+    led_on(led, 23); led_on(led, 24);
+    led_on(led, 37); led_on(led, 38); led_on(led, 39); led_on(led, 40); led_on(led, 41); led_on(led, 42);
+    led_on(led, 52); led_on(led, 53); led_on(led, 54); led_on(led, 55); led_on(led, 56); led_on(led, 57); led_on(led, 58); led_on(led, 59);
+    led_on(led, 70); led_on(led, 71); led_on(led, 72); led_on(led, 73);
+    led_on(led, 86); led_on(led, 87); led_on(led, 88); led_on(led, 89);
+
+    k_sleep(K_MSEC(100));
+}
+
+void led_on_down(void)
+{
+    // led_off_all();
+
+    led_on(led, 38); led_on(led, 39); led_on(led, 40); led_on(led, 41);
+    led_on(led, 54); led_on(led, 55); led_on(led, 56); led_on(led, 57);
+    led_on(led, 68); led_on(led, 69); led_on(led, 70); led_on(led, 71); led_on(led, 72); led_on(led, 73); led_on(led, 74); led_on(led, 75);
+    led_on(led, 85); led_on(led, 86); led_on(led, 87); led_on(led, 88); led_on(led, 89); led_on(led, 90);
+    led_on(led, 103); led_on(led, 104);
+
+    k_sleep(K_MSEC(100));
+
+}
+
 void display_pattern(const uint8_t pattern[8], bool right)
 {
     for (int row = 0; row < 8; row++) {
@@ -90,6 +160,7 @@ void display_pattern(const uint8_t pattern[8], bool right)
 void display_success_left(void)
 {
     display_pattern(password_success, LEFT);
+    display_pattern(password_success, RIGHT);
 }
 
 void display_success_right(void)
@@ -100,6 +171,7 @@ void display_success_right(void)
 void display_not_success_left(void)
 {
     display_pattern(password_unsuccess, LEFT);
+    display_pattern(password_unsuccess, RIGHT);
 }
 
 void display_not_success_right(void)

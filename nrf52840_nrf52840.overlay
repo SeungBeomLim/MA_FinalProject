@@ -20,8 +20,6 @@
 	aliases {
 		qdec0 = &qdec0;
 		gpio-sw = &gpiosw;
-		gpio-clk = &gpioclk;
-		gpio-dio = &gpiodio;
 	};
 
 	gpiocustom {
@@ -62,10 +60,6 @@
 	led-pre = < 500 >;
 };
 
-&spi3 {
-	status = "disabled";
-};
-
 &i2c0 {
 	clock-frequency = <I2C_BITRATE_STANDARD>;
 
@@ -83,4 +77,35 @@
 
 &spi3 {
 	status = "disabled";
+};
+
+/ {
+	zephyr,user {
+		io-channels = <&adc 1>, <&adc 2>;
+	};
+};
+
+&adc {
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	channel@1 {
+		reg = <1>;
+		zephyr,gain = "ADC_GAIN_1";
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+		zephyr,input-positive = <NRF_SAADC_AIN1>; /* P0.03 */
+		zephyr,resolution = <10>;
+		// zephyr,differential;
+	};
+
+	channel@2 {
+		reg = <2>;
+		zephyr,gain = "ADC_GAIN_1";
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+		zephyr,input-positive = <NRF_SAADC_AIN2>; /* P0.04 */
+		zephyr,resolution = <10>;
+		// zephyr,differential;
+	};
 };
