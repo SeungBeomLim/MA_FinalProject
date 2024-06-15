@@ -20,6 +20,8 @@
 	aliases {
 		qdec0 = &qdec0;
 		gpio-sw = &gpiosw;
+		gpio-clk = &gpioclk;
+		gpio-dio = &gpiodio;
 	};
 
 	gpiocustom {
