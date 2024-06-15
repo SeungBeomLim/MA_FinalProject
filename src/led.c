@@ -13,7 +13,7 @@ const uint8_t led_patterns[10][8] = {
     {0b11111111, 0b10000001, 0b10000001, 0b11111111, 0b00000001, 0b00000001, 0b11111111, 0b00000000}  // 9
 };
 
-const uint8_t password_success[8] = { //4자리 비번이 맞을 때 나와야 하는 부분
+const uint8_t password_success[8] = { // 4자리 비번이 맞을 때 나와야 하는 부분
     0b00000000, 
     0b01000010, 
     0b10100101, 
@@ -24,7 +24,7 @@ const uint8_t password_success[8] = { //4자리 비번이 맞을 때 나와야 �
     0b00000000
 };
 
-const uint8_t password_unsuccess[8] = { //4자리 비번이 안맞을 때 나와야 하는 부분
+const uint8_t password_unsuccess[8] = { // 4자리 비번이 안맞을 때 나와야 하는 부분
     0b00000000, 
     0b10100101, 
     0b01000010, 
@@ -87,12 +87,22 @@ void display_pattern(const uint8_t pattern[8], bool right)
     }
 }
 
-void display_success(void)
+void display_success_left(void)
 {
     display_pattern(password_success, LEFT);
 }
 
-void display_not_success(void)
+void display_success_right(void)
+{
+    display_pattern(password_success, RIGHT);
+}
+
+void display_not_success_left(void)
 {
     display_pattern(password_unsuccess, LEFT);
+}
+
+void display_not_success_right(void)
+{
+    display_pattern(password_unsuccess, RIGHT);
 }

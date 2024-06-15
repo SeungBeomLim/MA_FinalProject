@@ -1,9 +1,3 @@
-/*
- * Copyright (c) 2022 Valerio Setti <valerio.setti@gmail.com>
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/sensor.h>
@@ -14,15 +8,11 @@
 
 #include "led.h"
 #include "batterydisplay.h"
-#include "value.h"
 
 // [LED Part]
 #define LEFT 0
 #define RIGHT 1
-
-#if !DT_NODE_EXISTS(DT_ALIAS(qdec0))
-#error "Unsupported board: qdec0 devicetree alias is not defined"
-#endif
+#define MAX_ROTARY_IDX 10 // Add the max rotary index
 
 #define SW_NODE DT_NODELABEL(gpiosw)
 #if !DT_NODE_HAS_STATUS(SW_NODE, okay)
@@ -35,24 +25,56 @@ static bool sw_led_flag = false;
 static int rotary_idx = 0;
 static int saved_numbers[MAX_SAVED_NUMBERS] = { -1, -1, -1, -1 };
 static int saved_index = 0;
-static int password[MAX_SAVED_NUMBERS] = {1, 2, 3, 4}; //?��?�� 금고 비�??번호
+static int password[MAX_SAVED_NUMBERS] = {1, 2, 3, 4}; // ê¸ˆê³  ë¹„ë°€ë²ˆí˜¸
 static bool password_matched = false;
-int flag = true; //금고 ???리면 false�? �??��. 
+int flag = true; // ê¸ˆê³  ì—´ë¦¬ë©´ falseë¡œ ë³€ê²½
 
 static struct gpio_callback sw_cb_data;
 
-// ?���? ?��?�� 추�??
-extern const uint8_t led_patterns[10][8];
+static int seconds = 120;
 
-// [Battery Display Part]
-struct k_timer my_timer;
-struct k_work my_work;
+// ë°°í„°ë¦¬ ë ˆë²¨ í‘œì‹œ í•¨ìˆ˜
+void update_battery_display(void)
+{
+    int level;
 
-static int seconds = 180;
+    // ë°°í„°ë¦¬ ë ˆë²¨ì„ ì´ˆì— ë”°ë¼ ë§¤í•‘
+    if (seconds >= 120) {
+        level = 10;
+    } else if (seconds >= 108) {
+        level = 9;
+    } else if (seconds >= 96) {
+        level = 8;
+    } else if (seconds >= 84) {
+        level = 7;
+    } else if (seconds >= 72) {
+        level = 6;
+    } else if (seconds >= 60) {
+        level = 5;
+    } else if (seconds >= 48) {
+        level = 4;
+    } else if (seconds >= 36) {
+        level = 3;
+    } else if (seconds >= 24) {
+        level = 2;
+    } else if (seconds > 12) {
+        level = 1;
+    } else if (seconds == 0) {
+        level = 0;
+    }
 
+    // í•´ë‹¹ ë°°í„°ë¦¬ ë ˆë²¨ í‘œì‹œ
+    display_level(level);
 
-// [LED Part]
-bool compare_arrays(int *array1, int *array2, int size) { //금고 비번�? ?��?�� ?��?��?�� 비번 ?��?��
+    // ì´ˆ ê°ì†Œ
+    seconds--;
+    if (seconds < 0) {
+        //seconds = 11; ë¦¬ì…‹ë¨
+        flag = false;
+    }
+}
+
+bool compare_arrays(int *array1, int *array2, int size) {
     for (int i = 0; i < size; i++) {
         if (array1[i] != array2[i]) {
             return false;
@@ -71,7 +93,7 @@ void sw_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pi
     saved_index = (saved_index + 1) % MAX_SAVED_NUMBERS;
 
     // Print saved numbers
-    if (saved_index == 0) {  // 4�? encoder�? ?��????�� ?��
+    if (saved_index == 0) {  // 4ë²ˆ encoderì— ìž…ë ¥ì´ ì™„ë£Œëœ ê²½ìš°
         printk("complete\n");
         printk("Saved numbers: ");
         for (int i = 0; i < MAX_SAVED_NUMBERS; i++) {
@@ -84,7 +106,7 @@ void sw_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pi
             password_matched = true;
         } else {
             printk("Password not matched!\n");
-			flag = false;
+            flag = false;
         }
     }
 }
@@ -206,17 +228,31 @@ int main(void)
         return 0;
     }
 
+    // ë°°í„°ë¦¬ ë””ìŠ¤í”Œë ˆì´ ì´ˆê¸°í™”
+    if (batterydisplay_init() < 0) {
+        printk("Battery display init failed\n");
+        return 0;
+    }
+
     led_on_idx(rotary_idx, LEFT);
 
     while (true) {
         if (password_matched) {
-            display_success();
-            break; // 비�??번호�? 맞으�? while ?���?
+            display_success_left();
+            display_success_right();
+            break; // ë¹„ë°€ë²ˆí˜¸ê°€ ë§žìœ¼ë©´ whileë¬¸ íƒˆì¶œ
         }
 
-		if (!flag) {
-            display_not_success();
-            break; // 비�??번호�? ???리면 while�? ?���?. 근데 계속 비번??? ?��?��?��?�� ?��?��, ?��출�?? 말고, ?��?�� ?��간동?�� ?��?�� ?���? 보여주고 ?��?�� 0?���? 리셋?��?���? ?��?��?��?��.
+        if (!flag) {
+            display_not_success_left();
+            display_not_success_right();
+            //break; // ë¹„ë°€ë²ˆí˜¸ê°€ í‹€ë¦¬ë©´ whileë¬¸ íƒˆì¶œ
+            k_msleep(3000); //ìŠ¬í”ˆ í‘œì • ì§€ì† ì‹œê°„ ì´í›„ ë‹¤ì‹œ ë¹„ë²ˆ ì³ì•¼í•¨.
+            rotary_idx = 0; //ledê°€ ê³„ì† ì „ì— ì¼ë˜ê±¸ë¡œ ë‚˜ì™€ì„œ ì•„ì˜ˆ 0ìœ¼ë¡œ ì´ˆê¸°í™”.
+            display_pattern(led_patterns[rotary_idx], RIGHT); // ì‹¤íŒ¨ ì´í›„ ì˜¤ë¥¸ìª½ 0ìœ¼ë¡œ 
+            display_pattern(led_patterns[rotary_idx], LEFT); // ì‹¤íŒ¨ ì´í›„ ì˜¤ë¥¸ìª½ 0ìœ¼ë¡œ
+            flag = true;
+            seconds = 120; //ë°°í„°ë¦¬ ì´ˆ ë‹¤ì‹œ 120ìœ¼ë¡œ ì´ˆê¸°í™”
         }
 
         rc = sensor_sample_fetch(dev);
@@ -241,12 +277,11 @@ int main(void)
 
         printk("current value: %d\n", rotary_idx);
 
+        // ë°°í„°ë¦¬ ë””ìŠ¤í”Œë ˆì´ ì—…ë°ì´íŠ¸
+        update_battery_display();
+
         k_msleep(750);
     }
 
     return 0;
-}
-
-void pir() {
-
 }
