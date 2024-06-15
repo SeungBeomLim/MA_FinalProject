@@ -13,7 +13,7 @@ const uint8_t led_patterns[10][8] = {
     {0b11111111, 0b10000001, 0b10000001, 0b11111111, 0b00000001, 0b00000001, 0b11111111, 0b00000000}  // 9
 };
 
-const uint8_t password_success[8] = { //4?ë¦? ë¹„ë²ˆ?´ ë§ì„ ?•Œ ?‚˜????•¼ ?•˜?Š” ë¶?ë¶?
+const uint8_t password_success[8] = { // 4ìë¦¬ ë¹„ë²ˆì´ ë§ì„ ë•Œ ë‚˜ì™€ì•¼ í•˜ëŠ” ë¶€ë¶„
     0b00000000, 
     0b01000010, 
     0b10100101, 
@@ -24,7 +24,7 @@ const uint8_t password_success[8] = { //4?ë¦? ë¹„ë²ˆ?´ ë§ì„ ?•Œ ?‚˜????•¼ ?
     0b00000000
 };
 
-const uint8_t password_unsuccess[8] = { //4?ë¦? ë¹„ë²ˆ?´ ?•ˆë§ì„ ?•Œ ?‚˜????•¼ ?•˜?Š” ë¶?ë¶?
+const uint8_t password_unsuccess[8] = { // 4ìë¦¬ ë¹„ë²ˆì´ ì•ˆë§ì„ ë•Œ ë‚˜ì™€ì•¼ í•˜ëŠ” ë¶€ë¶„
     0b00000000, 
     0b10100101, 
     0b01000010, 
@@ -157,14 +157,24 @@ void display_pattern(const uint8_t pattern[8], bool right)
     }
 }
 
-void display_success(void)
+void display_success_left(void)
 {
     display_pattern(password_success, LEFT);
     display_pattern(password_success, RIGHT);
 }
 
-void display_not_success(void)
+void display_success_right(void)
+{
+    display_pattern(password_success, RIGHT);
+}
+
+void display_not_success_left(void)
 {
     display_pattern(password_unsuccess, LEFT);
+    display_pattern(password_unsuccess, RIGHT);
+}
+
+void display_not_success_right(void)
+{
     display_pattern(password_unsuccess, RIGHT);
 }

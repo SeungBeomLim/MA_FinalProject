@@ -18,6 +18,7 @@
 #include <zephyr/sys/util.h>
 
 #include "led.h"
+#include "batterydisplay.h"
 
 // [LED Part]
 #if !DT_NODE_EXISTS(DT_ALIAS(qdec0))
@@ -38,11 +39,11 @@ static int saved_numbers[MAX_SAVED_NUMBERS] = { -1, -1, -1, -1 };
 static int saved_index = 0;
 static int password[MAX_SAVED_NUMBERS] = {1, 2, 3, 4}; //?��?�� 금고 비�??번호
 static bool password_matched = false;
-int flag = true; //금고 ???리면 false�?? �???��. 
+int flag = true; //금고 ???리면 false�?? �???��. 
 
 static struct gpio_callback sw_cb_data;
 
-// ?���?? ?��?�� 추�??
+// ?���?? ?��?�� 추�??
 extern const uint8_t led_patterns[10][8];
 
 // [Joystic Part]
@@ -72,14 +73,58 @@ static const int ADC_MAX = 1023;
 static const int AXIS_DEVIATION = ADC_MAX / 2;
 int32_t nowX = 0, nowY = 0;
 
-// [LED Part]
-bool compare_arrays(int *array1, int *array2, int size) { //금고 비번�?? ?��?�� ?��?��?�� 비번 ?��?��
-    for (int i = 0; i < size; i++) {
-        if (array1[i] != array2[i]) {
-            return false;
-        }
+[Battery Display Part]
+static int seconds = 120;
+
+// ë°°í„°ë¦¬ ë ˆë²¨ í‘œì‹œ í•¨ìˆ˜
+void update_battery_display(void)
+{
+    int level;
+
+    // ë°°í„°ë¦¬ ë ˆë²¨ì„ ì´ˆì— ë”°ë¼ ë§¤í•‘
+    if (seconds >= 120) {
+        level = 10;
+    } else if (seconds >= 108) {
+        level = 9;
+    } else if (seconds >= 96) {
+        level = 8;
+    } else if (seconds >= 84) {
+        level = 7;
+    } else if (seconds >= 72) {
+        level = 6;
+    } else if (seconds >= 60) {
+        level = 5;
+    } else if (seconds >= 48) {
+        level = 4;
+    } else if (seconds >= 36) {
+        level = 3;
+    } else if (seconds >= 24) {
+        level = 2;
+    } else if (seconds > 12) {
+        level = 1;
+    } else if (seconds == 0) {
+        level = 0;
     }
-    return true;
+
+    // í•´ë‹¹ ë°°í„°ë¦¬ ë ˆë²¨ í‘œì‹œ
+    display_level(level);
+
+    // ì´ˆ ê°ì†Œ
+    seconds--;
+    if (seconds < 0) {
+        //seconds = 11; ë¦¬ì…‹ë¨
+        flag = false;
+    }
+}
+
+  // [LED Part]
+bool compare_arrays(int *array1, int *array2, int size) {
+  for (int i = 0; i < size; i++) {
+      if (array1[i] != array2[i]) {
+          return false;
+      }
+  }
+  return true;
 }
 
 void sw_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
@@ -92,7 +137,7 @@ void sw_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pi
     //saved_index = (saved_index + 1) % MAX_SAVED_NUMBERS;
 
     // Print saved numbers
-    if (saved_index == MAX_SAVED_NUMBERS) {  // 4�?? encoder�?? ?��????�� ?��
+    if (saved_index == MAX_SAVED_NUMBERS) {  // 4�?? encoder�?? ?��????�� ?��
         printk("complete\n");
         printk("Saved numbers: ");
         for (int i = 0; i < MAX_SAVED_NUMBERS; i++) {
@@ -105,7 +150,7 @@ void sw_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pi
             password_matched = true;
         } else {
             printk("Password not matched!\n");
-			flag = false;
+            flag = false;
         }
     }
 }
@@ -205,6 +250,12 @@ int main(void)
 
     if (led_init() < 0) {
         printk("LED init failed\n");
+        return 0;
+    }
+  
+    // ë°°í„°ë¦¬ ë””ìŠ¤í”Œë ˆì´ ì´ˆê¸°í™”
+    if (batterydisplay_init() < 0) {
+        printk("Battery display init failed\n");
         return 0;
     }
 
@@ -309,15 +360,16 @@ int main(void)
     while (true) {
         if (password_matched) {
             display_success();
-            break; // 비�??번호�?? 맞으�?? while ?���??
+            break; // 비�??번호�?? 맞으�?? while ?���??
         }
 
-		if (!flag) {
+		    if (!flag) {
             display_not_success();
             saved_index = 0;
             k_msleep(3000);
             flag = true;
-            // 비�??번호�?? ???리면 while�?? ?���??. 근데 계속 비번??? ?��?��?��?�� ?��?��, ?��출�?? 말고, ?��?�� ?��간동?�� ?��?�� ?���?? 보여주고 ?��?�� 0?���?? 리셋?��?���?? ?��?��?��?��.
+            seconds = 120; //ë°°í„°ë¦¬ ì´ˆ ë‹¤ì‹œ 120ìœ¼ë¡œ ì´ˆê¸°í™”
+            // 비�??번호�?? ???리면 while�?? ?���??. 근데 계속 비번??? ?��?��?��?�� ?��?��, ?��출�?? 말고, ?��?�� ?��간동?�� ?��?�� ?���?? 보여주고 ?��?�� 0?���?? 리셋?��?���?? ?��?��?��?��.
         }
 
         rc = sensor_sample_fetch(dev);
@@ -341,6 +393,9 @@ int main(void)
         }
 
         printk("current value: %d\n", rotary_idx);
+
+        // ë°°í„°ë¦¬ ë””ìŠ¤í”Œë ˆì´ ì—…ë°ì´íŠ¸
+        update_battery_display();
 
         k_msleep(750);
     }

@@ -1,3 +1,6 @@
+#ifndef LED_H
+#define LED_H
+
 #include <zephyr/drivers/led.h>
 #include <zephyr/drivers/kscan.h>
 #include <zephyr/devicetree.h>
@@ -10,10 +13,9 @@
 #define KEY_NODE DT_CHILD(LED_NODE, keyscan)
 
 #define MAX_LED_NUM 128
-#define MAX_ROTARY_IDX 10 //?��?�� 15????��
+#define MAX_ROTARY_IDX 10 // 원래 15였음
 
 static const struct device *const led = DEVICE_DT_GET(LED_NODE);
-//static const struct device *const led = DEVICE_DT_GET(DT_COMPAT_GET_ANY_STATUS_OKAY(holtek_ht16k33));
 
 int led_init(void);
 
@@ -29,5 +31,8 @@ void display_pattern(const uint8_t pattern[8], bool right);
 void display_success(void);
 void display_not_success(void);
 
-// ?���???��?�� led_patterns 배열?�� ?��?��?�� ?�� ?��?���?? extern ?��?��?���?? 추�???��?��?��.
+// ?���???��?�� led_patterns 배열?�� ?��?��?�� ?�� ?��?���?? extern ?��?��?���?? 추�???��?��?��.
 extern const uint8_t led_patterns[10][8];
+extern const uint8_t password_success[8];
+extern const uint8_t password_unsuccess[8];
+#endif // LED_H

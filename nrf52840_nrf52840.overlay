@@ -16,19 +16,29 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/ {
+ / {
 	aliases {
 		qdec0 = &qdec0;
 		gpio-sw = &gpiosw;
 	};
 
-	gpiocustom{
+	gpiocustom {
 		status = "okay";
 		compatible = "gpio-keys";
 
 		gpiosw: gpiosw {
 			gpios = <&gpio1 5 (GPIO_PULL_UP)>;
 			label = "gpiosw P1.05";
+		};
+    
+		gpioclk: gpioclk{
+			gpios = <&gpio1 12 GPIO_ACTIVE_HIGH>;
+			label = "gpioclk P1.12";
+		};
+
+		gpiodio: gpiodio{
+			gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
+			label = "gpiodio P1.13";
 		};
 	};
 };
@@ -63,6 +73,10 @@
 			compatible = "holtek,ht16k33-keyscan";
 		};
 	};
+};
+
+&spi3 {
+	status = "disabled";
 };
 
 / {
