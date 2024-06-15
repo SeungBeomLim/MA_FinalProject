@@ -4,4 +4,4 @@
 
 Project name: safe_project
 
-using material: Rotary Encoder, LED Matrix, I2C
+using material: Rotary Encoder, Qdeck, I2C Matrix, PIR
