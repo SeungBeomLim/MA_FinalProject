@@ -30,17 +30,17 @@ static bool sw_led_flag = false;
 static int rotary_idx = 0;
 static int saved_numbers[MAX_SAVED_NUMBERS] = { -1, -1, -1, -1 };
 static int saved_index = 0;
-static int password[MAX_SAVED_NUMBERS] = {1, 2, 3, 4}; //í˜„ì¬ ê¸ˆê³  ë¹„ë°€ë²ˆí˜¸
+static int password[MAX_SAVED_NUMBERS] = {1, 2, 3, 4}; //?˜„?¬ ê¸ˆê³  ë¹„ë??ë²ˆí˜¸
 static bool password_matched = false;
-int flag = true; //ê¸ˆê³  í‹€ë¦¬ë©´ falseë¡œ ë³€í•¨. 
+int flag = true; //ê¸ˆê³  ???ë¦¬ë©´ falseë¡? ë³??•¨. 
 
 
 static struct gpio_callback sw_cb_data;
 
-// ì™¸ë¶€ ì„ ì–¸ ì¶”ê°€
+// ?™¸ë¶? ?„ ?–¸ ì¶”ê??
 extern const uint8_t led_patterns[10][8];
 
-bool compare_arrays(int *array1, int *array2, int size) { //ê¸ˆê³  ë¹„ë²ˆê³¼ í˜„ì¬ ì…ë ¥í•œ ë¹„ë²ˆ í™•ì¸
+bool compare_arrays(int *array1, int *array2, int size) { //ê¸ˆê³  ë¹„ë²ˆê³? ?˜„?¬ ?…? ¥?•œ ë¹„ë²ˆ ?™•?¸
     for (int i = 0; i < size; i++) {
         if (array1[i] != array2[i]) {
             return false;
@@ -59,7 +59,7 @@ void sw_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pi
     saved_index = (saved_index + 1) % MAX_SAVED_NUMBERS;
 
     // Print saved numbers
-    if (saved_index == 0) {  // 4ë²ˆ encoderë¥¼ ëˆŒë €ì„ ë–„
+    if (saved_index == 0) {  // 4ë²? encoderë¥? ?ˆŒ????„ ?–„
         printk("complete\n");
         printk("Saved numbers: ");
         for (int i = 0; i < MAX_SAVED_NUMBERS; i++) {
@@ -143,12 +143,12 @@ int main(void)
     while (true) {
         if (password_matched) {
             display_success();
-            break; // ë¹„ë°€ë²ˆí˜¸ê°€ ë§ìœ¼ë©´ while íƒˆì¶œ
+            break; // ë¹„ë??ë²ˆí˜¸ê°? ë§ìœ¼ë©? while ?ƒˆì¶?
         }
 
 		if (!flag) {
             display_not_success();
-            break; // ë¹„ë°€ë²ˆí˜¸ê°€ í‹€ë¦¬ë©´ whileë¬¸ íƒˆì¶œ. ê·¼ë° ê³„ì† ë¹„ë²ˆì€ ì…ë ¥í•´ì•¼ í•˜ë‹ˆ, íƒˆì¶œì€ ë§ê³ , ì¼ì • ì‹œê°„ë™ì•ˆ ìš°ëŠ” ì–¼êµ´ ë³´ì—¬ì£¼ê³  ë‹¤ì‹œ 0ìœ¼ë¡œ ë¦¬ì…‹í•˜ë“ ì§€ í•´ì•¼í• ë“¯.
+            break; // ë¹„ë??ë²ˆí˜¸ê°? ???ë¦¬ë©´ whileë¬? ?ƒˆì¶?. ê·¼ë° ê³„ì† ë¹„ë²ˆ??? ?…? ¥?•´?•¼ ?•˜?‹ˆ, ?ƒˆì¶œì?? ë§ê³ , ?¼? • ?‹œê°„ë™?•ˆ ?š°?Š” ?–¼êµ? ë³´ì—¬ì£¼ê³  ?‹¤?‹œ 0?œ¼ë¡? ë¦¬ì…‹?•˜?“ ì§? ?•´?•¼?• ?“¯.
         }
 
         rc = sensor_sample_fetch(dev);
@@ -177,4 +177,8 @@ int main(void)
     }
 
     return 0;
+}
+
+void pir() {
+
 }
