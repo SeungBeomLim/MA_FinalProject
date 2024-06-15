@@ -1,23 +1,15 @@
-/*
- * Copyright (c) 2022 Valerio Setti <valerio.setti@gmail.com>
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/drivers/gpio.h>
 
-#include "led.h"
+#include "batterydisplay.h"
+#include "led.h" // Include the header for led functions
 
 #define LEFT 0
 #define RIGHT 1
-
-#if !DT_NODE_EXISTS(DT_ALIAS(qdec0))
-#error "Unsupported board: qdec0 devicetree alias is not defined"
-#endif
+#define MAX_ROTARY_IDX 10 // Add the max rotary index
 
 #define SW_NODE DT_NODELABEL(gpiosw)
 #if !DT_NODE_HAS_STATUS(SW_NODE, okay)
@@ -30,17 +22,56 @@ static bool sw_led_flag = false;
 static int rotary_idx = 0;
 static int saved_numbers[MAX_SAVED_NUMBERS] = { -1, -1, -1, -1 };
 static int saved_index = 0;
-static int password[MAX_SAVED_NUMBERS] = {1, 2, 3, 4}; //?��?�� 금고 비�??번호
+static int password[MAX_SAVED_NUMBERS] = {1, 2, 3, 4}; // 금고 비밀번호
 static bool password_matched = false;
-int flag = true; //금고 ???리면 false�? �??��. 
-
+int flag = true; // 금고 열리면 false로 변경
 
 static struct gpio_callback sw_cb_data;
 
-// ?���? ?��?�� 추�??
-extern const uint8_t led_patterns[10][8];
+static int seconds = 120;
 
-bool compare_arrays(int *array1, int *array2, int size) { //금고 비번�? ?��?�� ?��?��?�� 비번 ?��?��
+// 배터리 레벨 표시 함수
+void update_battery_display(void)
+{
+    int level;
+
+    // 배터리 레벨을 초에 따라 매핑
+    if (seconds >= 120) {
+        level = 10;
+    } else if (seconds >= 108) {
+        level = 9;
+    } else if (seconds >= 96) {
+        level = 8;
+    } else if (seconds >= 84) {
+        level = 7;
+    } else if (seconds >= 72) {
+        level = 6;
+    } else if (seconds >= 60) {
+        level = 5;
+    } else if (seconds >= 48) {
+        level = 4;
+    } else if (seconds >= 36) {
+        level = 3;
+    } else if (seconds >= 24) {
+        level = 2;
+    } else if (seconds > 12) {
+        level = 1;
+    } else if (seconds == 0) {
+        level = 0;
+    }
+
+    // 해당 배터리 레벨 표시
+    display_level(level);
+
+    // 초 감소
+    seconds--;
+    if (seconds < 0) {
+        //seconds = 11; 리셋됨
+        flag = false;
+    }
+}
+
+bool compare_arrays(int *array1, int *array2, int size) {
     for (int i = 0; i < size; i++) {
         if (array1[i] != array2[i]) {
             return false;
@@ -59,7 +90,7 @@ void sw_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pi
     saved_index = (saved_index + 1) % MAX_SAVED_NUMBERS;
 
     // Print saved numbers
-    if (saved_index == 0) {  // 4�? encoder�? ?��????�� ?��
+    if (saved_index == 0) {  // 4번 encoder에 입력이 완료된 경우
         printk("complete\n");
         printk("Saved numbers: ");
         for (int i = 0; i < MAX_SAVED_NUMBERS; i++) {
@@ -72,7 +103,7 @@ void sw_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pi
             password_matched = true;
         } else {
             printk("Password not matched!\n");
-			flag = false;
+            flag = false;
         }
     }
 }
@@ -138,19 +169,31 @@ int main(void)
         return 0;
     }
 
+    // 배터리 디스플레이 초기화
+    if (batterydisplay_init() < 0) {
+        printk("Battery display init failed\n");
+        return 0;
+    }
+
     led_on_idx(rotary_idx, LEFT);
 
     while (true) {
         if (password_matched) {
             display_success_left();
             display_success_right();
-            break; // 비�??번호�? 맞으�? while ?���?
+            break; // 비밀번호가 맞으면 while문 탈출
         }
 
-		if (!flag) {
+        if (!flag) {
             display_not_success_left();
             display_not_success_right();
-            break; // 비�??번호�? ???리면 while�? ?���?. 근데 계속 비번??? ?��?��?��?�� ?��?��, ?��출�?? 말고, ?��?�� ?��간동?�� ?��?�� ?���? 보여주고 ?��?�� 0?���? 리셋?��?���? ?��?��?��?��.
+            //break; // 비밀번호가 틀리면 while문 탈출
+            k_msleep(3000); //슬픈 표정 지속 시간 이후 다시 비번 쳐야함.
+            rotary_idx = 0; //led가 계속 전에 썼던걸로 나와서 아예 0으로 초기화.
+            display_pattern(led_patterns[rotary_idx], RIGHT); // 실패 이후 오른쪽 0으로 
+            display_pattern(led_patterns[rotary_idx], LEFT); // 실패 이후 오른쪽 0으로
+            flag = true;
+            seconds = 120; //배터리 초 다시 120으로 초기화
         }
 
         rc = sensor_sample_fetch(dev);
@@ -175,12 +218,11 @@ int main(void)
 
         printk("current value: %d\n", rotary_idx);
 
+        // 배터리 디스플레이 업데이트
+        update_battery_display();
+
         k_msleep(750);
     }
 
     return 0;
-}
-
-void pir() {
-
 }
