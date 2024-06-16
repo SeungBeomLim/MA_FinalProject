@@ -39,11 +39,11 @@ static int saved_numbers[MAX_SAVED_NUMBERS] = { -1, -1, -1, -1 };
 static int saved_index = 0;
 static int password[MAX_SAVED_NUMBERS] = {1, 2, 3, 4}; //?��?�� 금고 비�??번호
 static bool password_matched = false;
-int flag = true; //금고 ???리면 false�???? �?????��. 
+int flag = true; //금고 ???리면 false�????? �??????��. 
 
 static struct gpio_callback sw_cb_data;
 
-// ?���???? ?��?�� 추�??
+// ?���????? ?��?�� 추�??
 extern const uint8_t led_patterns[10][8];
 
 // [Joystic Part]
@@ -93,7 +93,7 @@ void sw_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pi
     //saved_index = (saved_index + 1) % MAX_SAVED_NUMBERS;
 
     // Print saved numbers
-    if (saved_index == MAX_SAVED_NUMBERS) {  // 4�???? encoder�???? ?��????�� ?��
+    if (saved_index == MAX_SAVED_NUMBERS) {  // 4�????? encoder�????? ?��????�� ?��
         printk("complete\n");
         printk("Saved numbers: ");
         for (int i = 0; i < MAX_SAVED_NUMBERS; i++) {
@@ -149,13 +149,13 @@ bool isChange(void)
 // [Battery Display Part]
 static int seconds = 120;
 
-// ë°°í??�°ë�?�?? ë ?�ë²�? í??�œì�?��? í??�¨�??��?
+// ë°°í??�°ë�?�??? ë ?�ë²�? í??�œì�?��? í??�¨�??��?
 void update_battery_display(void)
 {
     //int level;
     uint8_t level;
 
-    // ë°°í??�°ë�?�?? ë ?�ë²¨�???? ì´?�ì�?��? ë??�°ë�? ë§¤í??��??
+    // ë°°í??�°ë�?�??? ë ?�ë²¨�???? ì´?�ì�?��? ë??�°ë�? ë§¤í??��??
     if (seconds >= 120) {
         level = 10;
     } else if (seconds >= 108) {
@@ -180,7 +180,7 @@ void update_battery_display(void)
         level = 0;
     }
 
-    // í??�´ë�?��? ë°°í??�°ë�?�?? ë ?�ë²�? í??�œì�?��?
+    // í??�´ë�?��? ë°°í??�°ë�?�??? ë ?�ë²�? í??�œì�?��?
     display_level(level);
 
     // ì´?? ê°ì??��?
@@ -255,7 +255,7 @@ int main(void)
         return 0;
     }
   
-    // ë°°í??�°ë�?�?? ë??��?��?Š¤í??�Œë ˆ�?´ ì´?�ê¸°�??��???
+    // ë°°í??�°ë�?�??? ë??��?��?Š¤í??�Œë ˆ�?´ ì´?�ê¸°�??��???
     if (batterydisplay_init() < 0) {
         printk("Battery display init failed\n");
         return 0;
@@ -354,6 +354,11 @@ int main(void)
 
         update_battery_display();
 
+        if (seconds == 0) {
+            display_not_success();
+            break;
+        }
+
 		k_sleep(K_MSEC(100));
 	}
 
@@ -397,8 +402,13 @@ int main(void)
 
         printk("current value: %d\n", rotary_idx);
 
-        // ë°°í??�°ë�?�?? ë??��?��?Š¤í??�Œë ˆ�?´ ì??��?�ë°�?´íŠ¸
+        // ë°°í??�°ë�?�??? ë??��?��?Š¤í??�Œë ˆ�?´ ì??��?�ë°�?´íŠ¸
         update_battery_display();
+
+        if (seconds == 0) {
+            display_not_success();
+            break;
+        }
 
         k_msleep(750);
     }
