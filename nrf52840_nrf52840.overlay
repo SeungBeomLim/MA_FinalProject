@@ -27,15 +27,18 @@
 	gpiocustom {
 		status = "okay";
 		compatible = "gpio-keys";
+
 		gpiosw: gpiosw {
 			gpios = <&gpio1 5 (GPIO_PULL_UP)>;
 			label = "gpiosw P1.05";
 		};
-		gpioclk: gpioclk {
+    
+		gpioclk: gpioclk{
 			gpios = <&gpio1 12 GPIO_ACTIVE_HIGH>;
 			label = "gpioclk P1.12";
 		};
-		gpiodio: gpiodio {
+
+		gpiodio: gpiodio{
 			gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
 			label = "gpiodio P1.13";
 		};
@@ -76,4 +79,35 @@
 
 &spi3 {
 	status = "disabled";
+};
+
+/ {
+	zephyr,user {
+		io-channels = <&adc 1>, <&adc 2>;
+	};
+};
+
+&adc {
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	channel@1 {
+		reg = <1>;
+		zephyr,gain = "ADC_GAIN_1";
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+		zephyr,input-positive = <NRF_SAADC_AIN1>; /* P0.03 */
+		zephyr,resolution = <10>;
+		// zephyr,differential;
+	};
+
+	channel@2 {
+		reg = <2>;
+		zephyr,gain = "ADC_GAIN_1";
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+		zephyr,input-positive = <NRF_SAADC_AIN2>; /* P0.04 */
+		zephyr,resolution = <10>;
+		// zephyr,differential;
+	};
 };
