@@ -46,9 +46,9 @@
 static struct bt_uuid_128 custom_service_uuid = BT_UUID_INIT_128(BT_UUID_CUSTOM_SERVICE_VAL);
 static struct bt_uuid_128 custom_message_uuid = BT_UUID_INIT_128(BT_UUID_CUSTOM_MESSAGE_VAL);
 
-#define CUSTOM_MESSAGE_MAX_LEN 20
+#define CUSTOM_MESSAGE_MAX_LEN 50
 
-static uint8_t custom_message_value[CUSTOM_MESSAGE_MAX_LEN + 1] = "password success";
+static uint8_t custom_message_value[CUSTOM_MESSAGE_MAX_LEN + 1] = "your safe is secure.";
 
 static ssize_t read_custom_message(struct bt_conn *conn, const struct bt_gatt_attr *attr, void *buf, uint16_t len, uint16_t offset)
 {
@@ -163,6 +163,7 @@ int flag = true; // password fail when flag = false
 int time_out = false; //break when time_out get true
 int success = false; //when password success it will quit program.
 
+
 static struct gpio_callback sw_cb_data;
 
 extern const uint8_t led_patterns[10][8];
@@ -172,6 +173,7 @@ static int saved_number_joystick[MAX_SAVED_NUMBERS] = { -1, -1, -1, -1 };
 static int password_joystick[MAX_SAVED_NUMBERS] = {1, 2, 3, 4}; // Password of joystick
 static int saved_index_joystick = 0;
 int flag_joystick = false;
+int flag_joystick_moved = false;
 
 #if !DT_NODE_EXISTS(DT_PATH(zephyr_user)) || \
     !DT_NODE_HAS_PROP(DT_PATH(zephyr_user), io_channels)
@@ -192,6 +194,8 @@ int32_t preX = 0 , perY = 0;
 static const int ADC_MAX = 1023;
 static const int AXIS_DEVIATION = ADC_MAX / 2;
 int32_t nowX = 0, nowY = 0;
+
+int bluetooth = true;
 
 // [LED Part]
 bool compare_arrays(int *array1, int *array2, int size) {
@@ -306,6 +310,7 @@ void update_battery_display(void)
 
     // time decrease
     seconds--;
+
     if (seconds < 0) {
         time_out = true;
         display_not_success();
@@ -318,6 +323,9 @@ void process_password_matching(void) {
         display_success();
         start_bluetooth(); // Bluetooth 시작
         success = true;
+    } else{
+         strncpy(custom_message_value, "Your safe is being opened(password)", CUSTOM_MESSAGE_MAX_LEN);
+
     }
 
     if (!flag) {
@@ -338,6 +346,11 @@ int main(void)
     struct sensor_value val;
     int rc;
     const struct device *const dev = DEVICE_DT_GET(DT_ALIAS(qdec0));
+
+    if(bluetooth){
+        start_bluetooth();
+        bluetooth = false;
+    }
 
     if (!device_is_ready(dev)) {
         printk("Qdec device is not ready\n");
@@ -481,6 +494,7 @@ int main(void)
                 display_success();
                 k_msleep(3000);
                 led_off_all();
+                strncpy(custom_message_value, "Joystick success", CUSTOM_MESSAGE_MAX_LEN);
                 break;
             }
             else {
@@ -488,6 +502,7 @@ int main(void)
                 display_not_success();
                 k_msleep(3000);
                 saved_index_joystick = 0;
+                strncpy(custom_message_value, "Joystick fail", CUSTOM_MESSAGE_MAX_LEN);
             }
         }
 
