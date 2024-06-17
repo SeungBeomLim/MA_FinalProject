@@ -212,7 +212,7 @@ void sw_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pi
     saved_numbers[saved_index++] = rotary_idx;
   
     // Print saved numbers
-    if (saved_index == MAX_SAVED_NUMBERS) {  // 4ê°œì˜ ìˆ«ìžê°€ ì €ìž¥ë˜ë©´
+    if (saved_index == MAX_SAVED_NUMBERS) {  // 4ê°œì?? ì?�«�?žê°?�� ì ?��ìž¥ë?�ë©�?
         printk("complete\n");
         printk("Saved numbers: ");
         for (int i = 0; i < MAX_SAVED_NUMBERS; i++) {
@@ -273,7 +273,7 @@ static int seconds = 121;
 //battery gage per sec
 void update_battery_display(void)
 {
-    // ì´ˆê¸°í™”ëœ level ë³€ìˆ˜
+    // ì´?�ê¸°�??��??�ë�? level ë³?��ì?��?
     uint8_t level = 0;
 
     // every 12 seconds battery level get change
@@ -316,7 +316,7 @@ void update_battery_display(void)
 void process_password_matching(void) {
     if (password_matched) {
         display_success();
-        start_bluetooth(); // Bluetooth ì‹œìž‘
+        start_bluetooth(); // Bluetooth ì??�œ�?ž???
         success = true;
     }
 
@@ -506,7 +506,6 @@ int main(void)
 
         k_sleep(K_MSEC(100));
     }
-	}
 
     printk("Quadrature decoder sensor test\n");
     
