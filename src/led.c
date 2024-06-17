@@ -54,13 +54,13 @@ void led_off_all(void)
     }
 }
 
-void led_on_idx(int idx, bool right)
+void led_on_idx(int idx, bool left_right)
 {
     if (idx < 0 || idx >= 10) {
         printk("Invalid index %d\n", idx);
         return;
     }
-    display_pattern(led_patterns[idx], right);
+    display_pattern(led_patterns[idx], left_right);
 }
 
 void led_on_center(void)
@@ -133,12 +133,12 @@ void led_on_down(void)
 
 }
 
-void display_pattern(const uint8_t pattern[8], bool right)
+void display_pattern(const uint8_t pattern[8], bool left_right)
 {
     for (int row = 0; row < 8; row++) {
         for (int col = 0; col < 8; col++) {
             int led_index = row * 16 + col;  // Default for left 8x8 part
-            if (right) {
+            if (left_right) { // LEFT : 0, RIGHT : 1
                 led_index += 8; // Shift to the right 8x8 part
             }
             if (led_index >= 0 && led_index < MAX_LED_NUM) {

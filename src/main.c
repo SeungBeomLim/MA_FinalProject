@@ -19,6 +19,7 @@
 
 #include "led.h"
 #include "batterydisplay.h"
+#include "cts.h"
 
 #include <zephyr/types.h>
 #include <string.h>
@@ -34,8 +35,7 @@
 #include <zephyr/bluetooth/services/hrs.h>
 #include <zephyr/bluetooth/services/ias.h>
 
-#include "cts.h"
-
+// [BLE Part]
 // Custom Service Variables
 #define BT_UUID_CUSTOM_SERVICE_VAL \
     BT_UUID_128_ENCODE(0x12345678, 0x1234, 0x5678, 0x1234, 0x56789abcdef0)
@@ -48,7 +48,7 @@ static struct bt_uuid_128 custom_message_uuid = BT_UUID_INIT_128(BT_UUID_CUSTOM_
 
 #define CUSTOM_MESSAGE_MAX_LEN 50
 
-static uint8_t custom_message_value[CUSTOM_MESSAGE_MAX_LEN + 1] = "your safe is secure.";
+static uint8_t custom_message_value[CUSTOM_MESSAGE_MAX_LEN + 1] = "your safe is secured.";
 
 static ssize_t read_custom_message(struct bt_conn *conn, const struct bt_gatt_attr *attr, void *buf, uint16_t len, uint16_t offset)
 {
@@ -158,11 +158,10 @@ static bool sw_led_flag = false;
 static int saved_numbers[MAX_SAVED_NUMBERS] = { -1, -1, -1, -1 };
 static int saved_index = 0;
 static int password[MAX_SAVED_NUMBERS] = {1, 2, 3, 4}; // password of locker
-static bool password_matched = false;
-int flag = true; // password fail when flag = false 
+static int password_matched = -1;
+int flag_password_moved = false;
 int time_out = false; //break when time_out get true
 int success = false; //when password success it will quit program.
-
 
 static struct gpio_callback sw_cb_data;
 
@@ -189,13 +188,10 @@ static const struct adc_dt_spec adc_channels[] = {
                  DT_SPEC_AND_COMMA)
 };
 
-// add for joystick
 int32_t preX = 0 , perY = 0;
 static const int ADC_MAX = 1023;
 static const int AXIS_DEVIATION = ADC_MAX / 2;
 int32_t nowX = 0, nowY = 0;
-
-int bluetooth = true;
 
 // [LED Part]
 bool compare_arrays(int *array1, int *array2, int size) {
@@ -211,12 +207,13 @@ void sw_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pi
 {
     printk("SW pressed, displaying number %d on the right matrix\n", rotary_idx);
     sw_led_flag = true;
+    flag_password_moved = true;
 
     // Save the current number
     saved_numbers[saved_index++] = rotary_idx;
   
     // Print saved numbers
-    if (saved_index == MAX_SAVED_NUMBERS) {  // 4√™¬∞≈ì√¨¬ù?? √¨?Ü¬´√?≈æ¬ê√™¬∞?Ç¨ √¨¬†?Ç¨√¨≈æ¬•√´¬ê?ú√´¬©¬?
+    if (saved_index == MAX_SAVED_NUMBERS) {  // 4?°∆©´???? ?????????°∆??? ????????????????
         printk("complete\n");
         printk("Saved numbers: ");
         for (int i = 0; i < MAX_SAVED_NUMBERS; i++) {
@@ -230,9 +227,23 @@ void sw_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pi
             strncpy(custom_message_value, "password success", CUSTOM_MESSAGE_MAX_LEN);
         } else {
             printk("Password not matched!\n");
-            flag = false;
+            password_matched = false;
             strncpy(custom_message_value, "password fail", CUSTOM_MESSAGE_MAX_LEN);
         }
+    }
+}
+
+void check_password_matching(void) {
+    if (password_matched) {
+        display_success();
+        success = true;
+    } else {
+        display_not_success();
+        saved_index = 0;
+        k_msleep(3000);
+        rotary_idx = 0; // reset led matrix to 0 when password fail
+        display_pattern(led_patterns[rotary_idx], RIGHT); // LED matrix to 0 - right
+        display_pattern(led_patterns[rotary_idx], LEFT);  // LED matrix to 0 - left
     }
 }
 
@@ -272,12 +283,13 @@ bool isChange(void)
 }
 
 // [Battery Display Part]
-static int seconds = 121;
+static int seconds = 120;
+int seconds_count = 0;
 
 //battery gage per sec
-void update_battery_display(void)
+void update_battery_display(int stage)
 {
-    // √¨¬¥?Ü√™¬∏¬∞√??Ñ¢??ù√´¬ê≈? level √´¬≥?Ç¨√¨?ÜÀ?
+    // Battery Display Level
     uint8_t level = 0;
 
     // every 12 seconds battery level get change
@@ -309,49 +321,37 @@ void update_battery_display(void)
     display_level(level);
 
     // time decrease
-    seconds--;
+    if (stage == 1 && seconds_count == 10) {
+        seconds--;
+        seconds_count = 0;
+    }
+
+    if (stage == 2) {
+        seconds--;
+    }
 
     if (seconds < 0) {
         time_out = true;
         display_not_success();
         strncpy(custom_message_value, "time out", CUSTOM_MESSAGE_MAX_LEN);
     }
+
+    seconds_count++;
 }
 
-void process_password_matching(void) {
-    if (password_matched) {
-        display_success();
-        start_bluetooth(); // Bluetooth √¨??π≈ì√?≈æ???
-        success = true;
-    } else{
-         strncpy(custom_message_value, "Your safe is being opened(password)", CUSTOM_MESSAGE_MAX_LEN);
-
-    }
-
-    if (!flag) {
-        display_not_success();
-        saved_index = 0;
-        k_msleep(3000);
-        rotary_idx = 0; // reset led matrix to 0 when password fail 
-        display_pattern(led_patterns[rotary_idx], RIGHT); // LED matrix to 0 - right
-        display_pattern(led_patterns[rotary_idx], LEFT);  // LED matrix to 0 - left
-        flag = true;
-        start_bluetooth(); //nrf connect -  "password fail"
-
-    }
-}
+int bluetooth = true;
 
 int main(void)
 {
+    if (bluetooth) {
+        start_bluetooth();
+        bluetooth = false;
+    }
+
     // [LED Part Initialize]
     struct sensor_value val;
     int rc;
     const struct device *const dev = DEVICE_DT_GET(DT_ALIAS(qdec0));
-
-    if(bluetooth){
-        start_bluetooth();
-        bluetooth = false;
-    }
 
     if (!device_is_ready(dev)) {
         printk("Qdec device is not ready\n");
@@ -405,19 +405,21 @@ int main(void)
         }
     }
 
+    // I2C Matrix initialize
     if (led_init() < 0) {
         printk("LED init failed\n");
         return 0;
     }
   
-    // batterydisplay_init
+    // battery display initialize
     if (batterydisplay_init() < 0) {
         printk("Battery display init failed\n");
         return 0;
     }
 
+    // Stage 1. Password by Joystick
     while (1) {
-        printk("ADC reading[%u]: ", count++);
+        //printk("ADC reading[%u]: ", count++);
 
         (void)adc_sequence_init_dt(&adc_channels[0], &sequence);
         err = adc_read(adc_channels[0].dev, &sequence);
@@ -437,8 +439,14 @@ int main(void)
 
         nowY = (int32_t)buf;
 
-        printk("Joy X: %" PRIu32 ", ", nowX);
-        printk("Joy Y: %" PRIu32 ", ", nowY);
+        //printk("Joy X: %" PRIu32 ", ", nowX);
+        //printk("Joy Y: %" PRIu32 ", ", nowY);
+
+        if (flag_joystick_moved == true) {
+            strncpy(custom_message_value, "Your safe is being opened(joystick)", CUSTOM_MESSAGE_MAX_LEN);
+            update_battery_display(1);
+            printk("seconds: %d\n", seconds);
+        }
 
         if (nowX >= 65500 || nowY >= 65500){
             printk("Out of Range\n");
@@ -448,7 +456,7 @@ int main(void)
 
         bool checkFlag = isChange();
         if(!checkFlag){
-            printk("No Change\n");
+            //printk("No Change\n");
             k_sleep(K_MSEC(100));
             continue;
         } else {
@@ -466,6 +474,7 @@ int main(void)
                 saved_number_joystick[saved_index_joystick++] = 4;
             }
             flag_joystick = false;
+            flag_joystick_moved = true;
             printk("Left");
         } else if (nowX > AXIS_DEVIATION && nowY == ADC_MAX) {
             led_on_right();
@@ -473,6 +482,7 @@ int main(void)
                 saved_number_joystick[saved_index_joystick++] = 2;
             }
             flag_joystick = false;
+            flag_joystick_moved = true;
             printk("Right");
         } else if (nowY > AXIS_DEVIATION && nowX == ADC_MAX){
             led_on_up();
@@ -481,6 +491,7 @@ int main(void)
                 saved_number_joystick[saved_index_joystick++] = 1;
             }
             flag_joystick = false;
+            flag_joystick_moved = true;
             printk("Up");
         } else if (nowY < AXIS_DEVIATION && nowX == ADC_MAX){
             led_on_down();
@@ -489,6 +500,7 @@ int main(void)
                 saved_number_joystick[saved_index_joystick++] = 3;
             }
             flag_joystick = false;
+            flag_joystick_moved = true;
             printk("Down");
         }
         
@@ -506,16 +518,14 @@ int main(void)
                 display_not_success();
                 k_msleep(3000);
                 saved_index_joystick = 0;
-                strncpy(custom_message_value, "Joystick fail", CUSTOM_MESSAGE_MAX_LEN);
             }
         }
       
         printk("\n");
 
-        update_battery_display();
-      
-        if (seconds == 0) {
+        if (time_out) {
             display_not_success();
+            strncpy(custom_message_value, "someone failed to unlock your safe", CUSTOM_MESSAGE_MAX_LEN);
             break;
         }
 
@@ -526,18 +536,8 @@ int main(void)
     
     led_on_idx(rotary_idx, LEFT);
 
+    // Stage 2. Password by Rotary Encoder
     while (true) {
-
-        process_password_matching();
-
-        if(time_out) {
-            start_bluetooth(); // nrf connect - "time out"
-            break;
-        }
-        
-        if(success)
-            break;
-
         rc = sensor_sample_fetch(dev);
         if (rc != 0) {
             printk("Failed to fetch sample (%d)\n", rc);
@@ -550,26 +550,42 @@ int main(void)
             return 0;
         }
 
-        if (!sw_led_flag) {
+        if (!sw_led_flag) { // Display current rotary pattern on the left side
             display_rotary_led(val.val1);
-        } else {
-            // Display selected pattern on the right side
+        } else { // Display selected number on the right side
             display_pattern(led_patterns[rotary_idx], RIGHT);
             sw_led_flag = false; // Reset flag to allow continuous update
         }
 
         printk("current value: %d\n", rotary_idx);
 
-        // update battery level
-        update_battery_display();
+        if (flag_password_moved == true) {
+            strncpy(custom_message_value, "Your safe is being opened(password)", CUSTOM_MESSAGE_MAX_LEN);
+        }
 
-        if (seconds == 0) {
+        // update battery level
+        update_battery_display(2);
+        printk("seconds: %d\n", seconds);
+
+        if (saved_index == 4) {
+            check_password_matching();
+        }
+
+        // termination condition
+        if (time_out) {
             display_not_success();
+            strncpy(custom_message_value, "someone failed to unlock your safe", CUSTOM_MESSAGE_MAX_LEN);
             break;
         }
 
-        k_msleep(750);
+        if (success) {
+            break;
+        }
+
+        k_msleep(1000);
     }
+
+    strncpy(custom_message_value, "Your safe is opened!", CUSTOM_MESSAGE_MAX_LEN);
 
     return 0;
 }
