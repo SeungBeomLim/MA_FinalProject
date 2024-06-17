@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "gpio.h": "c",
-        "devicetree.h": "c"
+        "devicetree.h": "c",
+        "printk.h": "c"
     }
 }
