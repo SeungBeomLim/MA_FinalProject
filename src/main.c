@@ -210,9 +210,9 @@ void sw_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pi
 
     // Save the current number
     saved_numbers[saved_index++] = rotary_idx;
-
+  
     // Print saved numbers
-    if (saved_index == MAX_SAVED_NUMBERS) {  // 4개의 숫자가 저장되면
+    if (saved_index == MAX_SAVED_NUMBERS) {  // 4ê°œì˜ ìˆ«ìžê°€ ì €ìž¥ë˜ë©´
         printk("complete\n");
         printk("Saved numbers: ");
         for (int i = 0; i < MAX_SAVED_NUMBERS; i++) {
@@ -273,7 +273,7 @@ static int seconds = 121;
 //battery gage per sec
 void update_battery_display(void)
 {
-    // 초기화된 level 변수
+    // ì´ˆê¸°í™”ëœ level ë³€ìˆ˜
     uint8_t level = 0;
 
     // every 12 seconds battery level get change
@@ -316,7 +316,7 @@ void update_battery_display(void)
 void process_password_matching(void) {
     if (password_matched) {
         display_success();
-        start_bluetooth(); // Bluetooth 시작
+        start_bluetooth(); // Bluetooth ì‹œìž‘
         success = true;
     }
 
@@ -329,6 +329,7 @@ void process_password_matching(void) {
         display_pattern(led_patterns[rotary_idx], LEFT);  // LED matrix to 0 - left
         flag = true;
         start_bluetooth(); //nrf connect -  "password fail"
+
     }
 }
 
@@ -447,12 +448,13 @@ int main(void)
             printk("Center");
         } else if (nowX < AXIS_DEVIATION && nowY == ADC_MAX){
             led_on_left();
+
             if (flag_joystick) {
                 saved_number_joystick[saved_index_joystick++] = 4;
             }
             flag_joystick = false;
             printk("Left");
-        } else if (nowX > AXIS_DEVIATION && nowY == ADC_MAX){
+        } else if (nowX > AXIS_DEVIATION && nowY == ADC_MAX) {
             led_on_right();
             if (flag_joystick) {
                 saved_number_joystick[saved_index_joystick++] = 2;
@@ -461,6 +463,7 @@ int main(void)
             printk("Right");
         } else if (nowY > AXIS_DEVIATION && nowX == ADC_MAX){
             led_on_up();
+
             if (flag_joystick) {
                 saved_number_joystick[saved_index_joystick++] = 1;
             }
@@ -468,6 +471,7 @@ int main(void)
             printk("Up");
         } else if (nowY < AXIS_DEVIATION && nowX == ADC_MAX){
             led_on_down();
+
             if (flag_joystick) {
                 saved_number_joystick[saved_index_joystick++] = 3;
             }
@@ -490,19 +494,26 @@ int main(void)
                 saved_index_joystick = 0;
             }
         }
-
+      
         printk("\n");
 
         update_battery_display();
+      
+        if (seconds == 0) {
+            display_not_success();
+            break;
+        }
 
         k_sleep(K_MSEC(100));
     }
+	}
 
     printk("Quadrature decoder sensor test\n");
     
     led_on_idx(rotary_idx, LEFT);
 
     while (true) {
+
         process_password_matching();
 
         if(time_out) {
@@ -537,6 +548,11 @@ int main(void)
 
         // update battery level
         update_battery_display();
+
+        if (seconds == 0) {
+            display_not_success();
+            break;
+        }
 
         k_msleep(750);
     }

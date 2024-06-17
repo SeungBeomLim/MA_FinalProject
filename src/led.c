@@ -13,6 +13,7 @@ const uint8_t led_patterns[10][8] = {
     {0b11111111, 0b10000001, 0b10000001, 0b11111111, 0b00000001, 0b00000001, 0b11111111, 0b00000000}  // 9
 };
 
+
 const uint8_t password_success[8] = { // when password get success (smile face)
     0b00000000, 
     0b01000010, 

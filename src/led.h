@@ -13,7 +13,8 @@
 #define KEY_NODE DT_CHILD(LED_NODE, keyscan)
 
 #define MAX_LED_NUM 128
-#define MAX_ROTARY_IDX 10 // ?›?ž˜ 15????Œ
+
+#define MAX_ROTARY_IDX 10 // ?â€ºÂ?Å¾Ëœ 15????ÂÅ’
 
 static const struct device *const led = DEVICE_DT_GET(LED_NODE);
 
@@ -31,7 +32,7 @@ void display_pattern(const uint8_t pattern[8], bool right);
 void display_success(void);
 void display_not_success(void);
 
-// ?ï¿½ï¿½ï¿????ï¿½ï¿½?ï¿½ï¿½ led_patterns ë°°ì—´?ï¿½ï¿½ ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ ?ï¿½ï¿½ ?ï¿½ï¿½?ï¿½ï¿½ï¿??? extern ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ï¿??? ì¶”ï¿½???ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½.
+// ?Ã¯Â¿Â½Ã¯Â¿Â½Ã¯Â¿????Ã¯Â¿Â½Ã¯Â¿Â½?Ã¯Â¿Â½Ã¯Â¿Â½ led_patterns Ã«Â°Â°Ã¬â€”Â´?Ã¯Â¿Â½Ã¯Â¿Â½ ?Ã¯Â¿Â½Ã¯Â¿Â½?Ã¯Â¿Â½Ã¯Â¿Â½?Ã¯Â¿Â½Ã¯Â¿Â½ ?Ã¯Â¿Â½Ã¯Â¿Â½ ?Ã¯Â¿Â½Ã¯Â¿Â½?Ã¯Â¿Â½Ã¯Â¿Â½Ã¯Â¿??? extern ?Ã¯Â¿Â½Ã¯Â¿Â½?Ã¯Â¿Â½Ã¯Â¿Â½?Ã¯Â¿Â½Ã¯Â¿Â½Ã¯Â¿??? Ã¬Â¶â€Ã¯Â¿Â½???Ã¯Â¿Â½Ã¯Â¿Â½?Ã¯Â¿Â½Ã¯Â¿Â½?Ã¯Â¿Â½Ã¯Â¿Â½.
 extern const uint8_t led_patterns[10][8];
 extern const uint8_t password_success[8];
 extern const uint8_t password_unsuccess[8];

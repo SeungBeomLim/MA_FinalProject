@@ -1,7 +1,6 @@
 # Microprocessor Final Projcet
+### Project name: safe_project
 
-## NRF52840DK + Open-Smart Shield Two
+    Board: NRF52840DK + Open-Smart Shield Two
 
-Project name: safe_project
-
-using material: Rotary Encoder, LED Matrix, I2C
+    Using materials: Rotary Encoder, Qdeck, I2C Matrix, Battery Display
