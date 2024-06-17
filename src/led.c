@@ -13,7 +13,8 @@ const uint8_t led_patterns[10][8] = {
     {0b11111111, 0b10000001, 0b10000001, 0b11111111, 0b00000001, 0b00000001, 0b11111111, 0b00000000}  // 9
 };
 
-const uint8_t password_success[8] = { // 4?ë¦? ë¹„ë²ˆ?´ ë§ì„ ?•Œ ?‚˜????•¼ ?•˜?Š” ë¶?ë¶?
+
+const uint8_t password_success[8] = { // when password get success (smile face)
     0b00000000, 
     0b01000010, 
     0b10100101, 
@@ -24,7 +25,7 @@ const uint8_t password_success[8] = { // 4?ë¦? ë¹„ë²ˆ?´ ë§ì„ ?•Œ ?‚˜????•¼ 
     0b00000000
 };
 
-const uint8_t password_unsuccess[8] = { // 4?ë¦? ë¹„ë²ˆ?´ ?•ˆë§ì„ ?•Œ ?‚˜????•¼ ?•˜?Š” ë¶?ë¶?
+const uint8_t password_unsuccess[8] = { // when password fail (crying face)
     0b00000000, 
     0b10100101, 
     0b01000010, 
