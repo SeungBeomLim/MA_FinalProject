@@ -14,9 +14,14 @@
 
 #define MAX_LED_NUM 128
 
-#define MAX_ROTARY_IDX 10 // ?ì°½ï¿½ê¶—ì¨˜íš‚í˜¨?íš‡ì©íší¹ 15????íš‚í˜¶íš‡ï¿½ï¿½ï¿½
+#define MAX_ROTARY_IDX 10 // ?ì°½ï¿½ê¶—ì¨˜?š‚?˜¨??š‡ì©íš?¹ 15?????š‚?˜¶?š‡ï¿½ï¿½ï¿?
 
 static const struct device *const led = DEVICE_DT_GET(LED_NODE);
+
+extern const uint8_t led_patterns[10][8];
+
+extern const uint8_t password_success[8];
+extern const uint8_t password_unsuccess[8];
 
 int led_init(void);
 
@@ -31,10 +36,5 @@ void led_on_down(void);
 void display_pattern(const uint8_t pattern[8], bool right_left);
 void display_success(void);
 void display_not_success(void);
-
-extern const uint8_t led_patterns[10][8];
-
-extern const uint8_t password_success[8];
-extern const uint8_t password_unsuccess[8];
 
 #endif // LED_H
