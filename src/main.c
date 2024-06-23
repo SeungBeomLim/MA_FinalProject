@@ -48,7 +48,7 @@ static struct bt_uuid_128 custom_message_uuid = BT_UUID_INIT_128(BT_UUID_CUSTOM_
 
 #define CUSTOM_MESSAGE_MAX_LEN 50
 
-static uint8_t custom_message_value[CUSTOM_MESSAGE_MAX_LEN + 1] = "your safe is secured.";
+static uint8_t custom_message_value[CUSTOM_MESSAGE_MAX_LEN + 1] = "your safe is secured."; //when connect device with bluetooth
 
 static ssize_t read_custom_message(struct bt_conn *conn, const struct bt_gatt_attr *attr, void *buf, uint16_t len, uint16_t offset)
 {
@@ -153,12 +153,12 @@ static const struct gpio_dt_spec sw = GPIO_DT_SPEC_GET(SW_NODE, gpios);
 
 static int rotary_idx = 0;
 
-#define MAX_SAVED_NUMBERS 4
-static bool sw_led_flag = false;
-static int saved_numbers[MAX_SAVED_NUMBERS] = { -1, -1, -1, -1 };
-static int saved_index = 0;
-static int password[MAX_SAVED_NUMBERS] = {1, 2, 3, 4}; // password of locker
-static int password_matched = -1;
+#define MAX_SAVED_NUMBERS 4 //MAX number of password.
+static bool sw_led_flag = false; // can save number in encoder. 
+static int saved_numbers[MAX_SAVED_NUMBERS] = { -1, -1, -1, -1 }; // when click the encoder, the number will save. 
+static int saved_index = 0; //count the number that saved by rotary
+static int password[MAX_SAVED_NUMBERS] = {1, 2, 3, 4}; // password of locker, (it can change by user)
+static int password_matched = -1; //check if password is matched or not
 int flag_password_moved = false;
 int time_out = false; //break when time_out get true
 int success = false; //when password success it will quit program.
@@ -203,7 +203,7 @@ bool compare_arrays(int *array1, int *array2, int size) {
   return true;
 }
 
-void sw_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
+void sw_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pins) //encoder click í•˜ëŠ” ë¶€ë¶„
 {
     printk("SW pressed, displaying number %d on the right matrix\n", rotary_idx);
     sw_led_flag = true;
@@ -213,18 +213,18 @@ void sw_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pi
     saved_numbers[saved_index++] = rotary_idx;
   
     // Print saved numbers
-    if (saved_index == MAX_SAVED_NUMBERS) {  // 4?¡Æ©«???? ?????????¡Æ??? ????????????????
+    if (saved_index == MAX_SAVED_NUMBERS) {  // when saved index has 4 number.
         printk("complete\n");
         printk("Saved numbers: ");
-        for (int i = 0; i < MAX_SAVED_NUMBERS; i++) {
+        for (int i = 0; i < MAX_SAVED_NUMBERS; i++) { //number that user save (just print even is false)
             printk("%d ", saved_numbers[i]);
         }
         printk("\n");
         
-        if (compare_arrays(saved_numbers, password, MAX_SAVED_NUMBERS)) {
+        if (compare_arrays(saved_numbers, password, MAX_SAVED_NUMBERS)) { //compare if password is correct or wrong
             printk("Password matched!\n");
             password_matched = true;
-            strncpy(custom_message_value, "password success", CUSTOM_MESSAGE_MAX_LEN);
+            strncpy(custom_message_value, "password success", CUSTOM_MESSAGE_MAX_LEN); //send "password success" to bluetooth
         } else {
             printk("Password not matched!\n");
             password_matched = false;
@@ -234,12 +234,12 @@ void sw_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pi
 }
 
 void check_password_matching(void) {
-    if (password_matched) {
-        display_success();
-        success = true;
+    if (password_matched) { //if password_matched is true display smile face to LED matrix
+        display_success(); 
+        success = true; //progroam quit
     } else {
         display_not_success();
-        saved_index = 0;
+        saved_index = 0; // initialize saved_index to 0 
         k_msleep(3000);
         rotary_idx = 0; // reset led matrix to 0 when password fail
         display_pattern(led_patterns[rotary_idx], RIGHT); // LED matrix to 0 - right
@@ -249,7 +249,7 @@ void check_password_matching(void) {
 
 void display_rotary_led(int32_t rotary_val)
 {
-    if (rotary_val == 0) {
+    if (rotary_val == 0) { //make led matrix increase or decrease when rotate the encoder more or less than 17 degree
     } else if (rotary_val - 17 > 0) {
         rotary_idx++;
     } else if (rotary_val + 17 < 0) {
@@ -283,7 +283,7 @@ bool isChange(void)
 }
 
 // [Battery Display Part]
-static int seconds = 120;
+static int seconds = 121; //
 int seconds_count = 0;
 
 //battery gage per sec
@@ -333,19 +333,19 @@ void update_battery_display(int stage)
     if (seconds < 0) {
         time_out = true;
         display_not_success();
-        strncpy(custom_message_value, "time out", CUSTOM_MESSAGE_MAX_LEN);
+        strncpy(custom_message_value, "time out", CUSTOM_MESSAGE_MAX_LEN); // send "time out" to app
     }
 
     seconds_count++;
 }
 
-int bluetooth = true;
+int bluetooth = true; 
 
 int main(void)
 {
-    if (bluetooth) {
+    if (bluetooth) { //connect to bluetooth
         start_bluetooth();
-        bluetooth = false;
+        bluetooth = false; //didn't need to connect again
     }
 
     // [LED Part Initialize]
@@ -443,7 +443,7 @@ int main(void)
         //printk("Joy Y: %" PRIu32 ", ", nowY);
 
         if (flag_joystick_moved == true) {
-            strncpy(custom_message_value, "Your safe is being opened(joystick)", CUSTOM_MESSAGE_MAX_LEN);
+            strncpy(custom_message_value, "Your safe is being opened(joystick)", CUSTOM_MESSAGE_MAX_LEN); // 
             update_battery_display(1);
             printk("seconds: %d\n", seconds);
         }
